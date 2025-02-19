@@ -1,0 +1,50 @@
+import type { Iniciativa } from '../types/iniciativas';
+
+export const mockIniciativas: Record<string, Iniciativa> = {
+  '1': {
+    id: 1,
+    nome_iniciativa: 'Estratégia Jurídica',
+    tipo_iniciativa: 'projeto',
+    unidade_gestora_id: 1,
+    selo_id: 1,
+    programa_id: 1,
+    objetivo_estrategico_id: 1,
+    descricao_iniciativa: 'A Subprocuradoria-Geral de Justiça Jurídica requisitou ao setor de Jurimetria...',
+    promocao_objetivo: 'Através de treinamentos e capacitações',
+    publico_impactado: 'Membros e servidores do MPSP',
+    ano_vigencia: 2024,
+    status_atual: 'nao_iniciado',
+    status_aprovacao: 'aguardando_aprovacao',
+    data_ultima_atualizacao: '2024-03-20T10:00:00',
+    caminho_imagem: null,
+    data_criacao: '2024-03-20T10:00:00',
+    data_atualizacao: '2024-03-20T10:00:00',
+    percentual_conclusao: 0,
+    data_ultima_avaliacao: null,
+    programa: 'III - Melhoria e inovação das atividades administrativas e de apoio',
+    objetivo_estrategico: 'Capacitação de membros e servidores'
+  },
+  '2': {
+    id: 2,
+    nome_iniciativa: 'Modernização do Atendimento',
+    tipo_iniciativa: 'boa_pratica',
+    unidade_gestora_id: 2,
+    selo_id: null,
+    programa_id: 2,
+    objetivo_estrategico_id: 2,
+    descricao_iniciativa: 'Implementação de sistema de agendamento online...',
+    promocao_objetivo: 'Através da digitalização dos serviços',
+    publico_impactado: 'Cidadãos e servidores',
+    ano_vigencia: 2024,
+    status_atual: 'em_andamento',
+    status_aprovacao: 'aprovado',
+    data_ultima_atualizacao: '2024-03-20T10:00:00',
+    caminho_imagem: null,
+    data_criacao: '2024-03-20T10:00:00',
+    data_atualizacao: '2024-03-20T10:00:00',
+    percentual_conclusao: 30,
+    data_ultima_avaliacao: '2024-03-19',
+    programa: 'II - Aprimoramento da atividade finalística',
+    objetivo_estrategico: 'Modernização dos serviços de atendimento'
+  }
+}; 

@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .sidebar-item {
+    @apply flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors;
+  }
+  
+  .sidebar-item.active {
+    @apply bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400;
+  }
+  
+  .progress-bar {
+    @apply h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden;
+  }
+  
+  .progress-value {
+    @apply h-full bg-blue-600 rounded-full transition-all duration-300;
+  }
+}
+
+:root {
+  --primary: #4F46E5;
+}
+
+body {
+  @apply bg-gray-50 dark:bg-gray-900;
+}
