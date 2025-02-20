@@ -12,8 +12,10 @@ import type {
   Anexo,
   OrgaoEnvolvido,
   Premio,
-  Publicidade
+  Publicidade,
+  Marco
 } from '../types/iniciativas';
+import { mockDelay } from '../utils/mockUtils';
 
 // Type definitions for mock data structure
 type MockRecord<T> = { [key: string]: T };
@@ -32,13 +34,11 @@ type MockData = {
   orgaos_envolvidos: MockArray<OrgaoEnvolvido>;
   premios: MockArray<Premio>;
   publicidades: MockArray<Publicidade>;
+  marcos: MockArray<Marco>;
 };
 
 // Cast mock data to the correct type
 const mockData = mockRelacionamentos as unknown as MockData;
-
-// Helper function to simulate API delay in development
-const mockDelay = () => new Promise(resolve => setTimeout(resolve, 500));
 
 // Cronograma
 export const useCronograma = (iniciativaId: number) => {
@@ -53,6 +53,88 @@ export const useCronograma = (iniciativaId: number) => {
     } catch (error) {
       console.error('Erro ao buscar cronograma:', error);
       return null;
+    }
+  };
+
+  const getMarcos = async (): Promise<Marco[]> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.marcos[iniciativaId.toString()] || [];
+      }
+      const response = await api.get(`/iniciativas/${iniciativaId}/marcos`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar marcos:', error);
+      return [];
+    }
+  };
+
+  const adicionarMarco = async (marco: Omit<Marco, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<Marco | null> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const newMarco: Marco = {
+          ...marco,
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        if (!mockData.marcos[iniciativaId.toString()]) {
+          mockData.marcos[iniciativaId.toString()] = [];
+        }
+        mockData.marcos[iniciativaId.toString()].push(newMarco);
+        return newMarco;
+      }
+      const response = await api.post(`/iniciativas/${iniciativaId}/marcos`, marco);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao adicionar marco:', error);
+      return null;
+    }
+  };
+
+  const atualizarMarco = async (id: number, marco: Partial<Marco>): Promise<Marco | null> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const marcos = mockData.marcos[iniciativaId.toString()] || [];
+        const index = marcos.findIndex(m => m.id === id);
+        if (index === -1) return null;
+        
+        const updatedMarco = {
+          ...marcos[index],
+          ...marco,
+          data_atualizacao: new Date().toISOString()
+        };
+        marcos[index] = updatedMarco;
+        return updatedMarco;
+      }
+      const response = await api.put(`/iniciativas/${iniciativaId}/marcos/${id}`, marco);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar marco:', error);
+      return null;
+    }
+  };
+
+  const removerMarco = async (id: number): Promise<boolean> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const marcos = mockData.marcos[iniciativaId.toString()] || [];
+        const index = marcos.findIndex(m => m.id === id);
+        if (index === -1) return false;
+        
+        marcos.splice(index, 1);
+        return true;
+      }
+      await api.delete(`/iniciativas/${iniciativaId}/marcos/${id}`);
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover marco:', error);
+      return false;
     }
   };
 
@@ -103,7 +185,11 @@ export const useCronograma = (iniciativaId: number) => {
   return {
     getCronograma,
     salvarCronograma,
-    atualizarCronograma
+    atualizarCronograma,
+    getMarcos,
+    adicionarMarco,
+    atualizarMarco,
+    removerMarco
   };
 };
 
@@ -127,15 +213,15 @@ export const useFinanceiro = (iniciativaId: number) => {
     try {
       if (import.meta.env.DEV) {
         await mockDelay();
-        const newFinanceiro: Financeiro = {
-          ...financeiro,
+        const novoFinanceiro = {
           id: Date.now(),
           iniciativa_id: iniciativaId,
+          ...financeiro,
           data_criacao: new Date().toISOString(),
           data_atualizacao: new Date().toISOString()
         };
-        mockData.financeiros[iniciativaId.toString()] = newFinanceiro;
-        return newFinanceiro;
+        mockData.financeiros[iniciativaId.toString()] = novoFinanceiro;
+        return novoFinanceiro;
       }
       const response = await api.post(`/iniciativas/${iniciativaId}/financeiro`, financeiro);
       return response.data;
@@ -149,15 +235,16 @@ export const useFinanceiro = (iniciativaId: number) => {
     try {
       if (import.meta.env.DEV) {
         await mockDelay();
-        const existingFinanceiro = mockData.financeiros[iniciativaId.toString()];
-        if (!existingFinanceiro) return null;
-        const updatedFinanceiro: Financeiro = {
-          ...existingFinanceiro,
+        const financeiroAtual = mockData.financeiros[iniciativaId.toString()];
+        if (!financeiroAtual) return null;
+        
+        const financeiroAtualizado = {
+          ...financeiroAtual,
           ...financeiro,
           data_atualizacao: new Date().toISOString()
         };
-        mockData.financeiros[iniciativaId.toString()] = updatedFinanceiro;
-        return updatedFinanceiro;
+        mockData.financeiros[iniciativaId.toString()] = financeiroAtualizado;
+        return financeiroAtualizado;
       }
       const response = await api.put(`/iniciativas/${iniciativaId}/financeiro`, financeiro);
       return response.data;
@@ -167,10 +254,26 @@ export const useFinanceiro = (iniciativaId: number) => {
     }
   };
 
+  const removerFinanceiro = async (id: number): Promise<boolean> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        delete mockData.financeiros[iniciativaId.toString()];
+        return true;
+      }
+      await api.delete(`/iniciativas/${iniciativaId}/financeiro/${id}`);
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover financeiro:', error);
+      return false;
+    }
+  };
+
   return {
     getFinanceiro,
     salvarFinanceiro,
-    atualizarFinanceiro
+    atualizarFinanceiro,
+    removerFinanceiro
   };
 };
 
@@ -269,10 +372,17 @@ export const useContatos = (iniciativaId: number) => {
 export const useAcoes = (iniciativaId: number) => {
   const getAcoes = async (): Promise<Acao[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.acoes[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/acoes`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar ações:', error);
+      if (import.meta.env.DEV) {
+        return mockData.acoes[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
@@ -319,10 +429,17 @@ export const useAcoes = (iniciativaId: number) => {
 export const useRiscos = (iniciativaId: number) => {
   const getRiscos = async (): Promise<Risco[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.riscos[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/riscos`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar riscos:', error);
+      if (import.meta.env.DEV) {
+        return mockData.riscos[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
@@ -369,16 +486,38 @@ export const useRiscos = (iniciativaId: number) => {
 export const useDesafios = (iniciativaId: number) => {
   const getDesafios = async (): Promise<Desafio[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.desafios[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/desafios`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar desafios:', error);
+      if (import.meta.env.DEV) {
+        return mockData.desafios[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarDesafio = async (desafio: Omit<Desafio, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<Desafio | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const newDesafio: Desafio = {
+          ...desafio,
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        if (!mockData.desafios[iniciativaId.toString()]) {
+          mockData.desafios[iniciativaId.toString()] = [];
+        }
+        mockData.desafios[iniciativaId.toString()].push(newDesafio);
+        return newDesafio;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/desafios`, desafio);
       return response.data;
     } catch (error) {
@@ -389,6 +528,20 @@ export const useDesafios = (iniciativaId: number) => {
 
   const atualizarDesafio = async (id: number, desafio: Partial<Desafio>): Promise<Desafio | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const desafios = mockData.desafios[iniciativaId.toString()] || [];
+        const index = desafios.findIndex(d => d.id === id);
+        if (index === -1) return null;
+        
+        const updatedDesafio = {
+          ...desafios[index],
+          ...desafio,
+          data_atualizacao: new Date().toISOString()
+        };
+        desafios[index] = updatedDesafio;
+        return updatedDesafio;
+      }
       const response = await api.put(`/iniciativas/${iniciativaId}/desafios/${id}`, desafio);
       return response.data;
     } catch (error) {
@@ -399,6 +552,15 @@ export const useDesafios = (iniciativaId: number) => {
 
   const removerDesafio = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const desafios = mockData.desafios[iniciativaId.toString()] || [];
+        const index = desafios.findIndex(d => d.id === id);
+        if (index === -1) return false;
+        
+        desafios.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/desafios/${id}`);
       return true;
     } catch (error) {
@@ -419,16 +581,38 @@ export const useDesafios = (iniciativaId: number) => {
 export const useJustificativas = (iniciativaId: number) => {
   const getJustificativas = async (): Promise<Justificativa[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.justificativas[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/justificativas`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar justificativas:', error);
+      if (import.meta.env.DEV) {
+        return mockData.justificativas[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarJustificativa = async (justificativa: Omit<Justificativa, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<Justificativa | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const newJustificativa: Justificativa = {
+          ...justificativa,
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        if (!mockData.justificativas[iniciativaId.toString()]) {
+          mockData.justificativas[iniciativaId.toString()] = [];
+        }
+        mockData.justificativas[iniciativaId.toString()].push(newJustificativa);
+        return newJustificativa;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/justificativas`, justificativa);
       return response.data;
     } catch (error) {
@@ -439,6 +623,20 @@ export const useJustificativas = (iniciativaId: number) => {
 
   const atualizarJustificativa = async (id: number, justificativa: Partial<Justificativa>): Promise<Justificativa | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const justificativas = mockData.justificativas[iniciativaId.toString()] || [];
+        const index = justificativas.findIndex(j => j.id === id);
+        if (index === -1) return null;
+        
+        const updatedJustificativa = {
+          ...justificativas[index],
+          ...justificativa,
+          data_atualizacao: new Date().toISOString()
+        };
+        justificativas[index] = updatedJustificativa;
+        return updatedJustificativa;
+      }
       const response = await api.put(`/iniciativas/${iniciativaId}/justificativas/${id}`, justificativa);
       return response.data;
     } catch (error) {
@@ -449,6 +647,15 @@ export const useJustificativas = (iniciativaId: number) => {
 
   const removerJustificativa = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const justificativas = mockData.justificativas[iniciativaId.toString()] || [];
+        const index = justificativas.findIndex(j => j.id === id);
+        if (index === -1) return false;
+        
+        justificativas.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/justificativas/${id}`);
       return true;
     } catch (error) {
@@ -469,16 +676,38 @@ export const useJustificativas = (iniciativaId: number) => {
 export const useResultados = (iniciativaId: number) => {
   const getResultados = async (): Promise<Resultado[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.resultados[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/resultados`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar resultados:', error);
+      if (import.meta.env.DEV) {
+        return mockData.resultados[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarResultado = async (resultado: Omit<Resultado, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<Resultado | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const newResultado: Resultado = {
+          ...resultado,
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        if (!mockData.resultados[iniciativaId.toString()]) {
+          mockData.resultados[iniciativaId.toString()] = [];
+        }
+        mockData.resultados[iniciativaId.toString()].push(newResultado);
+        return newResultado;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/resultados`, resultado);
       return response.data;
     } catch (error) {
@@ -489,6 +718,20 @@ export const useResultados = (iniciativaId: number) => {
 
   const atualizarResultado = async (id: number, resultado: Partial<Resultado>): Promise<Resultado | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const resultados = mockData.resultados[iniciativaId.toString()] || [];
+        const index = resultados.findIndex(r => r.id === id);
+        if (index === -1) return null;
+        
+        const updatedResultado = {
+          ...resultados[index],
+          ...resultado,
+          data_atualizacao: new Date().toISOString()
+        };
+        resultados[index] = updatedResultado;
+        return updatedResultado;
+      }
       const response = await api.put(`/iniciativas/${iniciativaId}/resultados/${id}`, resultado);
       return response.data;
     } catch (error) {
@@ -499,6 +742,15 @@ export const useResultados = (iniciativaId: number) => {
 
   const removerResultado = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const resultados = mockData.resultados[iniciativaId.toString()] || [];
+        const index = resultados.findIndex(r => r.id === id);
+        if (index === -1) return false;
+        
+        resultados.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/resultados/${id}`);
       return true;
     } catch (error) {
@@ -519,16 +771,47 @@ export const useResultados = (iniciativaId: number) => {
 export const useAnexos = (iniciativaId: number) => {
   const getAnexos = async (): Promise<Anexo[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.anexos[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/anexos`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar anexos:', error);
+      if (import.meta.env.DEV) {
+        return mockData.anexos[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarAnexo = async (formData: FormData): Promise<Anexo | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const arquivo = formData.get('arquivo') as File;
+        const nome_anexo = formData.get('nome_anexo') as string;
+        
+        const newAnexo: Anexo = {
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          nome_anexo,
+          nome_arquivo: arquivo.name,
+          caminho_arquivo: URL.createObjectURL(arquivo),
+          tipo_arquivo: arquivo.type,
+          tamanho_arquivo: arquivo.size,
+          usuario_upload_id: 1, // Mock user ID
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        
+        if (!mockData.anexos[iniciativaId.toString()]) {
+          mockData.anexos[iniciativaId.toString()] = [];
+        }
+        mockData.anexos[iniciativaId.toString()].push(newAnexo);
+        return newAnexo;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/anexos`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -543,6 +826,15 @@ export const useAnexos = (iniciativaId: number) => {
 
   const removerAnexo = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const anexos = mockData.anexos[iniciativaId.toString()] || [];
+        const index = anexos.findIndex(a => a.id === id);
+        if (index === -1) return false;
+        
+        anexos.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/anexos/${id}`);
       return true;
     } catch (error) {
@@ -562,16 +854,39 @@ export const useAnexos = (iniciativaId: number) => {
 export const useOrgaosEnvolvidos = (iniciativaId: number) => {
   const getOrgaosEnvolvidos = async (): Promise<OrgaoEnvolvido[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.orgaos_envolvidos[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/orgaos-envolvidos`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar órgãos envolvidos:', error);
+      if (import.meta.env.DEV) {
+        return mockData.orgaos_envolvidos[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarOrgaoEnvolvido = async (orgao: Omit<OrgaoEnvolvido, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<OrgaoEnvolvido | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const novoOrgao: OrgaoEnvolvido = {
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          ...orgao,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        
+        if (!mockData.orgaos_envolvidos[iniciativaId.toString()]) {
+          mockData.orgaos_envolvidos[iniciativaId.toString()] = [];
+        }
+        mockData.orgaos_envolvidos[iniciativaId.toString()].push(novoOrgao);
+        return novoOrgao;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/orgaos-envolvidos`, orgao);
       return response.data;
     } catch (error) {
@@ -582,6 +897,19 @@ export const useOrgaosEnvolvidos = (iniciativaId: number) => {
 
   const atualizarOrgaoEnvolvido = async (id: number, orgao: Partial<OrgaoEnvolvido>): Promise<OrgaoEnvolvido | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const orgaos = mockData.orgaos_envolvidos[iniciativaId.toString()] || [];
+        const index = orgaos.findIndex(o => o.id === id);
+        if (index === -1) return null;
+        
+        orgaos[index] = {
+          ...orgaos[index],
+          ...orgao,
+          data_atualizacao: new Date().toISOString()
+        };
+        return orgaos[index];
+      }
       const response = await api.put(`/iniciativas/${iniciativaId}/orgaos-envolvidos/${id}`, orgao);
       return response.data;
     } catch (error) {
@@ -592,6 +920,15 @@ export const useOrgaosEnvolvidos = (iniciativaId: number) => {
 
   const removerOrgaoEnvolvido = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const orgaos = mockData.orgaos_envolvidos[iniciativaId.toString()] || [];
+        const index = orgaos.findIndex(o => o.id === id);
+        if (index === -1) return false;
+        
+        orgaos.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/orgaos-envolvidos/${id}`);
       return true;
     } catch (error) {
@@ -612,16 +949,39 @@ export const useOrgaosEnvolvidos = (iniciativaId: number) => {
 export const usePremios = (iniciativaId: number) => {
   const getPremios = async (): Promise<Premio[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.premios[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/premios`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar prêmios:', error);
+      if (import.meta.env.DEV) {
+        return mockData.premios[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarPremio = async (premio: Omit<Premio, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<Premio | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const novoPremio: Premio = {
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          ...premio,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        
+        if (!mockData.premios[iniciativaId.toString()]) {
+          mockData.premios[iniciativaId.toString()] = [];
+        }
+        mockData.premios[iniciativaId.toString()].push(novoPremio);
+        return novoPremio;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/premios`, premio);
       return response.data;
     } catch (error) {
@@ -632,6 +992,19 @@ export const usePremios = (iniciativaId: number) => {
 
   const atualizarPremio = async (id: number, premio: Partial<Premio>): Promise<Premio | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const premios = mockData.premios[iniciativaId.toString()] || [];
+        const index = premios.findIndex(p => p.id === id);
+        if (index === -1) return null;
+        
+        premios[index] = {
+          ...premios[index],
+          ...premio,
+          data_atualizacao: new Date().toISOString()
+        };
+        return premios[index];
+      }
       const response = await api.put(`/iniciativas/${iniciativaId}/premios/${id}`, premio);
       return response.data;
     } catch (error) {
@@ -642,6 +1015,15 @@ export const usePremios = (iniciativaId: number) => {
 
   const removerPremio = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const premios = mockData.premios[iniciativaId.toString()] || [];
+        const index = premios.findIndex(p => p.id === id);
+        if (index === -1) return false;
+        
+        premios.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/premios/${id}`);
       return true;
     } catch (error) {
@@ -662,16 +1044,39 @@ export const usePremios = (iniciativaId: number) => {
 export const usePublicidades = (iniciativaId: number) => {
   const getPublicidades = async (): Promise<Publicidade[]> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        return mockData.publicidades[iniciativaId.toString()] || [];
+      }
       const response = await api.get(`/iniciativas/${iniciativaId}/publicidades`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar publicidades:', error);
+      if (import.meta.env.DEV) {
+        return mockData.publicidades[iniciativaId.toString()] || [];
+      }
       return [];
     }
   };
 
   const adicionarPublicidade = async (publicidade: Omit<Publicidade, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>): Promise<Publicidade | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const novaPublicidade: Publicidade = {
+          id: Date.now(),
+          iniciativa_id: iniciativaId,
+          ...publicidade,
+          data_criacao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        };
+        
+        if (!mockData.publicidades[iniciativaId.toString()]) {
+          mockData.publicidades[iniciativaId.toString()] = [];
+        }
+        mockData.publicidades[iniciativaId.toString()].push(novaPublicidade);
+        return novaPublicidade;
+      }
       const response = await api.post(`/iniciativas/${iniciativaId}/publicidades`, publicidade);
       return response.data;
     } catch (error) {
@@ -682,6 +1087,19 @@ export const usePublicidades = (iniciativaId: number) => {
 
   const atualizarPublicidade = async (id: number, publicidade: Partial<Publicidade>): Promise<Publicidade | null> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const publicidades = mockData.publicidades[iniciativaId.toString()] || [];
+        const index = publicidades.findIndex(p => p.id === id);
+        if (index === -1) return null;
+        
+        publicidades[index] = {
+          ...publicidades[index],
+          ...publicidade,
+          data_atualizacao: new Date().toISOString()
+        };
+        return publicidades[index];
+      }
       const response = await api.put(`/iniciativas/${iniciativaId}/publicidades/${id}`, publicidade);
       return response.data;
     } catch (error) {
@@ -692,6 +1110,15 @@ export const usePublicidades = (iniciativaId: number) => {
 
   const removerPublicidade = async (id: number): Promise<boolean> => {
     try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const publicidades = mockData.publicidades[iniciativaId.toString()] || [];
+        const index = publicidades.findIndex(p => p.id === id);
+        if (index === -1) return false;
+        
+        publicidades.splice(index, 1);
+        return true;
+      }
       await api.delete(`/iniciativas/${iniciativaId}/publicidades/${id}`);
       return true;
     } catch (error) {

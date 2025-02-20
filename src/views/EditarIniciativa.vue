@@ -83,11 +83,33 @@
 
                   <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Grupo MPSP <span class="text-red-500">*</span>
+                      Unidade Gestora <span class="text-red-500">*</span>
                     </label>
                     <BaseSelect
-                      v-model="form.grupo_mpsp_id"
-                      :options="gruposMpsp"
+                      v-model="form.unidade_gestora_id"
+                      :options="unidadesGestoras"
+                      required
+                    />
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Programa
+                    </label>
+                    <BaseSelect
+                      v-model="form.programa_id"
+                      :options="programas"
+                      :disabled="form.tipo_iniciativa === 'boa_pratica'"
+                    />
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Objetivo Estratégico <span class="text-red-500">*</span>
+                    </label>
+                    <BaseSelect
+                      v-model="form.objetivo_estrategico_id"
+                      :options="objetivosEstrategicos"
                       required
                     />
                   </div>
@@ -110,15 +132,15 @@
                     <BaseInput
                       v-model="form.ano_vigencia"
                       type="number"
-                      min="2024"
-                      max="2100"
+                      :min="2000"
+                      :max="2100"
                       required
                     />
                   </div>
 
                   <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Status Atual <span class="text-red-500">*</span>
+                      Status Atual
                     </label>
                     <BaseSelect
                       v-model="form.status_atual"
@@ -128,7 +150,7 @@
                         { value: 'concluido', label: 'Concluído' },
                         { value: 'suspenso', label: 'Suspenso' }
                       ]"
-                      required
+                      disabled
                     />
                   </div>
                 </div>
@@ -163,16 +185,6 @@
                 <div class="space-y-6">
                   <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Objetivo Estratégico <span class="text-red-500">*</span>
-                    </label>
-                    <BaseInput
-                      v-model="form.objetivo_estrategico"
-                      required
-                    />
-                  </div>
-
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
                       Promoção do Objetivo <span class="text-red-500">*</span>
                     </label>
                     <textarea
@@ -185,20 +197,10 @@
 
                   <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Público Alvo <span class="text-red-500">*</span>
+                      Público Impactado <span class="text-red-500">*</span>
                     </label>
                     <BaseInput
-                      v-model="form.publico_alvo"
-                      required
-                    />
-                  </div>
-
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Recursos Estimados <span class="text-red-500">*</span>
-                    </label>
-                    <BaseInput
-                      v-model="form.recursos_estimados"
+                      v-model="form.publico_impactado"
                       required
                     />
                   </div>
@@ -294,6 +296,7 @@ import PremiosTab from '../components/iniciativas/PremiosTab.vue';
 import PublicidadesTab from '../components/iniciativas/PublicidadesTab.vue';
 
 import { useIniciativas } from '../services/iniciativas';
+import type { Iniciativa } from '../types/iniciativas';
 
 const router = useRouter();
 const route = useRoute();
@@ -304,23 +307,23 @@ const activeTab = ref('minhas-iniciativas');
 const currentTab = ref('dados-basicos');
 const loading = ref(true);
 const saving = ref(false);
-const iniciativa = ref<any>(null);
+const iniciativa = ref<Iniciativa | null>(null);
 
 // Form data
-const form = ref({
+const form = ref<Partial<Iniciativa>>({
   tipo_iniciativa: '',
   nome_iniciativa: '',
-  grupo_mpsp_id: '',
-  selo_id: null,
+  unidade_gestora_id: undefined,
+  selo_id: undefined,
+  programa_id: undefined,
+  objetivo_estrategico_id: undefined,
   descricao_iniciativa: '',
-  nome_programa: '',
-  objetivo_estrategico: '',
   promocao_objetivo: '',
-  publico_alvo: '',
-  recursos_estimados: '',
-  ano_vigencia: new Date().getFullYear(),
+  publico_impactado: '',
+  ano_vigencia: String(new Date().getFullYear()),
   status_atual: 'nao_iniciado',
-  status_aprovacao: 'aguardando_aprovacao'
+  status_aprovacao: 'aguardando_aprovacao',
+  percentual_conclusao: 0
 });
 
 // Tabs configuration
@@ -342,9 +345,20 @@ const tabs = [
 ];
 
 // Mock data - substituir por chamadas à API
-const gruposMpsp = [
-  { value: '1', label: 'Atividade Meio' },
-  { value: '2', label: 'Atividade Fim' }
+const unidadesGestoras = [
+  { value: '1', label: 'SUBPROCURADORIA-GERAL DE JUSTIÇA JURÍDICA' },
+  { value: '2', label: 'PROMOTORIA DE JUSTIÇA' },
+  { value: '3', label: 'DTI' }
+];
+
+const programas = [
+  { value: '1', label: 'Programa de Excelência' },
+  { value: '2', label: 'Programa de Inovação' }
+];
+
+const objetivosEstrategicos = [
+  { value: '1', label: 'Modernização Tecnológica' },
+  { value: '2', label: 'Eficiência Operacional' }
 ];
 
 const selos = [
@@ -356,12 +370,14 @@ const selos = [
 const carregarIniciativa = async () => {
   loading.value = true;
   try {
-    const data = await iniciativasService.getIniciativa(iniciativaId);
-    iniciativa.value = data;
-    form.value = {
-      ...form.value,
-      ...data
-    };
+    const response = await iniciativasService.getIniciativa(iniciativaId);
+    if (response) {
+      iniciativa.value = response;
+      form.value = {
+        ...response,
+        ano_vigencia: String(response.ano_vigencia) // Convert to string for the form
+      };
+    }
   } catch (error) {
     console.error('Erro ao carregar iniciativa:', error);
   } finally {
@@ -372,11 +388,14 @@ const carregarIniciativa = async () => {
 const salvarDadosBasicos = async () => {
   saving.value = true;
   try {
-    await iniciativasService.atualizarIniciativa(iniciativaId, form.value);
-    // Mostrar mensagem de sucesso
+    const dadosBasicos = {
+      ...form.value,
+      ano_vigencia: Number(form.value.ano_vigencia) // Convert back to number for API
+    };
+    await iniciativasService.atualizarIniciativa(iniciativaId, dadosBasicos);
+    await carregarIniciativa();
   } catch (error) {
     console.error('Erro ao salvar dados básicos:', error);
-    // Mostrar mensagem de erro
   } finally {
     saving.value = false;
   }
@@ -386,10 +405,10 @@ const salvarObjetivos = async () => {
   saving.value = true;
   try {
     await iniciativasService.atualizarIniciativa(iniciativaId, form.value);
-    // Mostrar mensagem de sucesso
+    // TODO: Mostrar mensagem de sucesso
   } catch (error) {
     console.error('Erro ao salvar objetivos:', error);
-    // Mostrar mensagem de erro
+    // TODO: Mostrar mensagem de erro
   } finally {
     saving.value = false;
   }

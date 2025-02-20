@@ -26,6 +26,34 @@ export const mockRelacionamentos = {
       data_atualizacao: '2024-01-01T00:00:00'
     }
   },
+  marcos: {
+    '1': [
+      {
+        id: 1,
+        iniciativa_id: 1,
+        tipo_marco: 'inicio',
+        status_marco: 'concluido',
+        descricao_marco: 'Início do Projeto',
+        data_prevista: '2024-01-01',
+        data_conclusao: '2024-01-15',
+        observacoes: 'Projeto iniciado com sucesso',
+        data_criacao: '2024-01-01T00:00:00',
+        data_atualizacao: '2024-01-15T00:00:00'
+      },
+      {
+        id: 2,
+        iniciativa_id: 1,
+        tipo_marco: 'planejamento',
+        status_marco: 'em_andamento',
+        descricao_marco: 'Planejamento das Atividades',
+        data_prevista: '2024-02-01',
+        data_conclusao: null,
+        observacoes: 'Em fase de definição do escopo',
+        data_criacao: '2024-01-01T00:00:00',
+        data_atualizacao: '2024-01-01T00:00:00'
+      }
+    ]
+  },
   financeiros: {
     '1': {
       id: 1,
@@ -152,10 +180,28 @@ export const mockRelacionamentos = {
       {
         id: 1,
         iniciativa_id: 1,
-        descricao_resultado: 'Aumento de 30% na eficiência do processo',
+        tipo_resultado: 'quantitativo',
         status_resultado: 'alcancado',
+        descricao_resultado: 'Aumento de 30% na eficiência do processo',
+        indicador_medicao: 'Percentual de redução no tempo de processamento',
+        meta: '30%',
+        valor_alcancado: '32%',
+        data_medicao: '2024-03-15',
         data_criacao: '2024-01-01T00:00:00',
-        data_atualizacao: '2024-01-01T00:00:00'
+        data_atualizacao: '2024-03-15T00:00:00'
+      },
+      {
+        id: 2,
+        iniciativa_id: 1,
+        tipo_resultado: 'qualitativo',
+        status_resultado: 'parcialmente_alcancado',
+        descricao_resultado: 'Melhoria na satisfação dos usuários',
+        indicador_medicao: 'Avaliação de satisfação dos usuários',
+        meta: '4.5/5.0',
+        valor_alcancado: '4.2/5.0',
+        data_medicao: '2024-03-10',
+        data_criacao: '2024-01-01T00:00:00',
+        data_atualizacao: '2024-03-10T00:00:00'
       }
     ]
   },

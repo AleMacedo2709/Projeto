@@ -217,8 +217,8 @@ const tabs = [
         type: 'select',
         required: true,
         options: [
-          { value: true, label: 'Sim' },
-          { value: false, label: 'Não' }
+          { value: 'true', label: 'Sim' },
+          { value: 'false', label: 'Não' }
         ]
       }
     ],
@@ -323,8 +323,8 @@ const tabs = [
         type: 'select',
         required: true,
         options: [
-          { value: true, label: 'Sim' },
-          { value: false, label: 'Não' }
+          { value: 'true', label: 'Sim' },
+          { value: 'false', label: 'Não' }
         ]
       }
     ],
@@ -345,7 +345,12 @@ const tableData = ref({
 });
 
 const currentTabData = computed(() => tabs.find(tab => tab.id === currentTab.value));
-const currentItems = computed(() => tableData.value[currentTab.value as keyof typeof tableData.value]);
+const currentItems = computed(() => {
+  if (!tableData.value[currentTab.value]) {
+    return [];
+  }
+  return tableData.value[currentTab.value];
+});
 
 // Função para carregar dados das dropdowns
 const loadDropdownData = async () => {
@@ -361,7 +366,7 @@ const loadDropdownData = async () => {
       label: s.nome_selo
     }));
 
-    unidadesData.value = mockData.unidades.map(u => ({
+    unidadesData.value = mockData.unidades_gestoras.map(u => ({
       value: u.id,
       label: `${u.nome_unidade} (${u.sigla_unidade})`
     }));
@@ -371,7 +376,7 @@ const loadDropdownData = async () => {
       label: p.nome_programa
     }));
 
-    objetivosData.value = mockData.objetivos.map(o => ({
+    objetivosData.value = mockData.objetivos_estrategicos.map(o => ({
       value: o.id,
       label: o.nome_objetivo
     }));
@@ -398,9 +403,26 @@ const loadDropdownData = async () => {
 // Função para carregar dados da tabela atual
 const loadTableData = async () => {
   try {
+    // Mapear os IDs das tabs para as chaves do mockData
+    const mockDataMapping: Record<string, keyof typeof mockData> = {
+      'usuarios': 'usuarios',
+      'unidades': 'unidades_gestoras',
+      'selos': 'selos',
+      'programas': 'programas',
+      'objetivos': 'objetivos_estrategicos',
+      'tipos_risco': 'tipos_risco',
+      'papeis': 'papeis_equipe',
+      'gestores': 'gestores'
+    };
+
+    const mockDataKey = mockDataMapping[currentTab.value];
+    if (!mockDataKey) {
+      throw new Error(`Dados não encontrados para a tab ${currentTab.value}`);
+    }
+
     // Fazer uma cópia profunda dos dados do mock para o tableData
     tableData.value[currentTab.value] = JSON.parse(
-      JSON.stringify(mockData[currentTab.value as keyof typeof mockData])
+      JSON.stringify(mockData[mockDataKey])
     );
   } catch (error: any) {
     console.error('Erro ao carregar dados:', error);
@@ -416,6 +438,9 @@ const formatFieldValue = (value: any, field: any) => {
     if (field.key === 'usuario_id') {
       const user = mockData.usuarios.find(u => u.id === value);
       return user ? `${user.nome_usuario} (${user.email_usuario})` : value;
+    }
+    if (field.key === 'ativo' || field.key === 'ativa') {
+      return value === true || value === 'true' ? 'Sim' : 'Não';
     }
     const option = field.options?.find((opt: any) => opt.value === value);
     return option?.label || value;
@@ -453,8 +478,21 @@ const openModal = (item?: any) => {
 
 const editItem = (item: any) => {
   isEditing.value = true;
-  selectedItem.value = item;
-  formData.value = { ...item };
+  // Create a copy of the item and convert boolean values to strings for select fields
+  const itemCopy = { ...item };
+  
+  // Get the fields for the current tab
+  const fields = currentTabData.value?.fields || [];
+  
+  // Convert boolean values to strings for select fields
+  fields.forEach(field => {
+    if (field.type === 'select' && typeof itemCopy[field.key] === 'boolean') {
+      itemCopy[field.key] = itemCopy[field.key].toString();
+    }
+  });
+  
+  selectedItem.value = itemCopy;
+  formData.value = itemCopy;
   showModal.value = true;
 };
 
@@ -548,20 +586,28 @@ const saveItem = async () => {
 
     const currentData = mockData[currentTab.value as keyof typeof mockData];
     
+    // Converter valores de string para boolean quando necessário
+    const formDataToSave = { ...formData.value };
+    if (currentTab.value === 'gestores' && 'ativo' in formDataToSave) {
+      formDataToSave.ativo = formDataToSave.ativo === 'true';
+    }
+    if (currentTab.value === 'unidades' && 'ativa' in formDataToSave) {
+      formDataToSave.ativa = formDataToSave.ativa === 'true';
+    }
+    
     if (isEditing.value && selectedItem.value) {
       const index = currentData.findIndex((i: any) => i.id === selectedItem.value.id);
       if (index > -1) {
         currentData[index] = { 
-          ...formData.value, 
+          ...formDataToSave, 
           id: selectedItem.value.id 
         };
         
         // Atualizar dados relacionados se necessário
         if (currentTab.value === 'usuarios') {
-          // Atualizar nome do usuário em gestores
           mockData.gestores.forEach(g => {
             if (g.usuario_id === selectedItem.value.id) {
-              loadDropdownData(); // Recarregar dropdowns para atualizar labels
+              loadDropdownData();
             }
           });
         }
@@ -572,7 +618,7 @@ const saveItem = async () => {
       // Verificar unicidade de campos
       if (currentTab.value === 'usuarios') {
         const existingUser = currentData.find((u: any) => 
-          u.email_usuario === formData.value.email_usuario
+          u.email_usuario === formDataToSave.email_usuario
         );
         if (existingUser) {
           throw new Error('Já existe um usuário com este e-mail.');
@@ -584,7 +630,7 @@ const saveItem = async () => {
         : 1;
         
       currentData.push({ 
-        ...formData.value, 
+        ...formDataToSave, 
         id: newId 
       });
       
@@ -592,7 +638,7 @@ const saveItem = async () => {
     }
 
     await loadTableData();
-    await loadDropdownData(); // Recarregar dropdowns após alterações
+    await loadDropdownData();
     closeModal();
   } catch (error: any) {
     console.error('Erro ao salvar:', error);

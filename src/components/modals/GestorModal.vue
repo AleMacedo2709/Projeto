@@ -46,8 +46,8 @@
           id="ativo"
           v-model="form.ativo"
           :options="[
-            { value: true, label: 'Ativo' },
-            { value: false, label: 'Inativo' }
+            { value: 'true', label: 'Ativo' },
+            { value: 'false', label: 'Inativo' }
           ]"
           placeholder="Selecione o status"
           required
@@ -87,7 +87,7 @@ interface Usuario {
 interface GestorData {
   usuario_id: string;
   niveis_acesso: string[];
-  ativo: boolean;
+  ativo: string;
 }
 
 interface Props {
@@ -103,7 +103,7 @@ const props = withDefaults(defineProps<Props>(), {
   initialData: () => ({
     usuario_id: '',
     niveis_acesso: [],
-    ativo: true
+    ativo: 'true'
   }),
   usuarios: () => []
 });
@@ -125,7 +125,7 @@ const niveisAcesso = [
 const form = ref<GestorData>({
   usuario_id: '',
   niveis_acesso: [],
-  ativo: true
+  ativo: 'true'
 });
 
 const handleSubmit = () => {
@@ -143,7 +143,9 @@ onMounted(() => {
       niveis_acesso: Array.isArray(props.initialData.niveis_acesso) 
         ? props.initialData.niveis_acesso 
         : [],
-      ativo: props.initialData.ativo ?? true
+      ativo: typeof props.initialData.ativo === 'boolean'
+        ? props.initialData.ativo.toString()
+        : props.initialData.ativo || 'true'
     };
   }
 });

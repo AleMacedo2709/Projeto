@@ -1,22 +1,12 @@
 import { ref } from 'vue';
-
-export interface User {
-  id: number;
-  nome_usuario: string;
-  email_usuario: string;
-  cargo_usuario: string;
-}
+import type { Usuario } from '../types/iniciativas';
+import { mockUsuarios } from '../mocks/usuarios';
 
 // Mock inicial para desenvolvimento
-const currentUser = ref<User>({
-  id: 1,
-  nome_usuario: 'João Silva',
-  email_usuario: 'joao.silva@mpsp.mp.br',
-  cargo_usuario: 'Promotor de Justiça'
-});
+const currentUser = ref<Usuario>(mockUsuarios[0]);
 
 export const useAuth = () => {
-  const setCurrentUser = (user: User) => {
+  const setCurrentUser = (user: Usuario) => {
     currentUser.value = user;
   };
 

@@ -17,7 +17,7 @@ const editingPremio = ref<Premio | null>(null);
 const novoPremio = ref<Omit<Premio, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>>({
   nome_instituicao: '',
   tipo_classificacao: '',
-  ano_premio: new Date().getFullYear().toString(),
+  ano_premio: '',
   descricao_premio: ''
 });
 
@@ -79,93 +79,90 @@ const resetForm = () => {
   novoPremio.value = {
     nome_instituicao: '',
     tipo_classificacao: '',
-    ano_premio: new Date().getFullYear().toString(),
+    ano_premio: '',
     descricao_premio: ''
   };
   editingPremio.value = null;
   showForm.value = false;
 };
 
-const anosDisponiveis = () => {
+const validarAno = (ano: string) => {
   const anoAtual = new Date().getFullYear();
-  const anos = [];
-  for (let i = anoAtual - 10; i <= anoAtual + 1; i++) {
-    anos.push(i.toString());
-  }
-  return anos;
+  const anoNumerico = parseInt(ano);
+  return !isNaN(anoNumerico) && anoNumerico >= 1900 && anoNumerico <= anoAtual;
 };
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h3 class="text-lg font-medium text-gray-900">Prêmios da Iniciativa</h3>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Prêmios da Iniciativa</h3>
       <button
         v-if="!showForm"
         type="button"
         @click="showForm = true"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
       >
         Adicionar Prêmio
       </button>
     </div>
 
     <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
     </div>
 
     <template v-else>
       <!-- Formulário -->
-      <div v-if="showForm" class="bg-white shadow sm:rounded-lg p-4">
+      <div v-if="showForm" class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Instituição *
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Nome da Instituição *
             </label>
             <input
               v-model="novoPremio.nome_instituicao"
               type="text"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Classificação *
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Tipo de Classificação *
             </label>
             <input
               v-model="novoPremio.tipo_classificacao"
               type="text"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Ano *
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Ano do Prêmio *
             </label>
-            <select
+            <input
               v-model="novoPremio.ano_premio"
+              type="text"
+              pattern="\d{4}"
+              maxlength="4"
+              placeholder="AAAA"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            >
-              <option v-for="ano in anosDisponiveis()" :key="ano" :value="ano">
-                {{ ano }}
-              </option>
-            </select>
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+            />
           </div>
 
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
               Descrição do Prêmio *
             </label>
             <textarea
               v-model="novoPremio.descricao_premio"
               rows="3"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             ></textarea>
           </div>
         </div>
@@ -174,7 +171,7 @@ const anosDisponiveis = () => {
           <button
             type="button"
             @click="resetForm"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
           >
             Cancelar
           </button>
@@ -185,9 +182,11 @@ const anosDisponiveis = () => {
               saving ||
               !novoPremio.nome_instituicao ||
               !novoPremio.tipo_classificacao ||
-              !novoPremio.descricao_premio
+              !novoPremio.ano_premio ||
+              !novoPremio.descricao_premio ||
+              !validarAno(novoPremio.ano_premio)
             "
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 disabled:opacity-50"
           >
             {{ saving ? 'Salvando...' : (editingPremio ? 'Atualizar' : 'Adicionar') }}
           </button>
@@ -195,51 +194,58 @@ const anosDisponiveis = () => {
       </div>
 
       <!-- Lista de Prêmios -->
-      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <ul role="list" class="divide-y divide-gray-200">
-          <li v-for="premio in premios" :key="premio.id" class="px-4 py-4 sm:px-6">
-            <div class="flex items-center justify-between">
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-medium text-gray-900">{{ premio.nome_instituicao }}</h4>
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                    {{ premio.ano_premio }}
-                  </span>
-                </div>
-                <div class="mt-2">
-                  <p class="text-sm text-gray-600">{{ premio.tipo_classificacao }}</p>
-                  <p class="mt-1 text-sm text-gray-500">{{ premio.descricao_premio }}</p>
-                </div>
-              </div>
-              <div class="ml-5 flex-shrink-0">
-                <div class="flex space-x-2">
-                  <button
-                    type="button"
-                    @click="editarPremio(premio)"
-                    class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    <span class="sr-only">Editar</span>
-                    <!-- Heroicon name: pencil -->
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    @click="removerPremio(premio.id)"
-                    class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    <span class="sr-only">Remover</span>
-                    <!-- Heroicon name: trash -->
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
+      <div v-else class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Instituição
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Classificação
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Ano
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Descrição
+              </th>
+              <th scope="col" class="relative px-6 py-3">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-for="premio in premios" :key="premio.id">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {{ premio.nome_instituicao }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {{ premio.tipo_classificacao }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {{ premio.ano_premio }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                {{ premio.descricao_premio }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="editarPremio(premio)"
+                  class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
+                >
+                  Editar
+                </button>
+                <button
+                  @click="removerPremio(premio.id)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                >
+                  Remover
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </template>
   </div>

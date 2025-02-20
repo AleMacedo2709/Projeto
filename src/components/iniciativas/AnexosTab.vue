@@ -1,3 +1,161 @@
+<template>
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Anexos da Iniciativa</h3>
+      <button
+        v-if="!showForm"
+        type="button"
+        @click="showForm = true"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
+      >
+        Adicionar Anexo
+      </button>
+    </div>
+
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
+    </div>
+
+    <template v-else>
+      <!-- Formulário -->
+      <div v-if="showForm" class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-4">
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Nome do Anexo *
+            </label>
+            <input
+              v-model="novoAnexo.nome_anexo"
+              type="text"
+              required
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Arquivo *
+            </label>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div class="space-y-1 text-center">
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  stroke="currentColor"
+                  fill="none"
+                  viewBox="0 0 48 48"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                  <label
+                    for="file-upload"
+                    class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                  >
+                    <span>Selecionar arquivo</span>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      class="sr-only"
+                      @change="handleFileUpload"
+                      required
+                    />
+                  </label>
+                  <p class="pl-1">ou arraste e solte</p>
+                </div>
+                <p class="text-xs text-gray-500">
+                  PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG até 10MB
+                </p>
+              </div>
+            </div>
+            <div v-if="selectedFile" class="mt-2 text-sm text-gray-500">
+              Arquivo selecionado: {{ selectedFile.name }}
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end space-x-3">
+          <button
+            type="button"
+            @click="resetForm"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            @click="salvarAnexo"
+            :disabled="saving || !novoAnexo.nome_anexo || !selectedFile"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 disabled:opacity-50"
+          >
+            {{ saving ? 'Salvando...' : (editingAnexo ? 'Atualizar' : 'Adicionar') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de Anexos -->
+      <div v-else class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Nome
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Tipo
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Tamanho
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Data de Upload
+              </th>
+              <th scope="col" class="relative px-6 py-3">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-for="anexo in anexos" :key="anexo.id">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                <a
+                  :href="anexo.caminho_arquivo"
+                  target="_blank"
+                  class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
+                >
+                  {{ anexo.nome_anexo }}
+                </a>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {{ anexo.tipo_arquivo }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {{ formatarTamanho(anexo.tamanho_arquivo) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {{ formatarData(anexo.data_criacao) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="removerAnexo(anexo.id)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                >
+                  Remover
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Anexo } from '../../types/iniciativas';
@@ -10,8 +168,14 @@ const props = defineProps<{
 const anexosService = useAnexos(props.iniciativaId);
 const anexos = ref<Anexo[]>([]);
 const loading = ref(false);
-const uploading = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
+const saving = ref(false);
+const showForm = ref(false);
+const editingAnexo = ref<Anexo | null>(null);
+const selectedFile = ref<File | null>(null);
+
+const novoAnexo = ref<Omit<Anexo, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao' | 'caminho_arquivo' | 'tipo_arquivo' | 'tamanho_arquivo' | 'usuario_upload_id'>>({
+  nome_anexo: ''
+});
 
 onMounted(async () => {
   await carregarAnexos();
@@ -28,28 +192,56 @@ const carregarAnexos = async () => {
   }
 };
 
-const handleFileUpload = async (event: Event) => {
+const handleFileUpload = (event: Event) => {
   const input = event.target as HTMLInputElement;
-  if (!input.files?.length) return;
+  if (input.files && input.files.length > 0) {
+    const file = input.files[0];
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      alert('O arquivo deve ter no máximo 10MB');
+      input.value = '';
+      selectedFile.value = null;
+      return;
+    }
+    
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'image/jpeg',
+      'image/png'
+    ];
 
-  const file = input.files[0];
-  const formData = new FormData();
-  formData.append('arquivo', file);
-  formData.append('nome_anexo', file.name);
-  formData.append('tipo_arquivo', file.type);
-  formData.append('tamanho_arquivo', file.size.toString());
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não permitido');
+      input.value = '';
+      selectedFile.value = null;
+      return;
+    }
 
-  uploading.value = true;
+    selectedFile.value = file;
+  }
+};
+
+const salvarAnexo = async () => {
+  if (!selectedFile.value) return;
+
+  saving.value = true;
   try {
+    const formData = new FormData();
+    formData.append('arquivo', selectedFile.value);
+    formData.append('nome_anexo', novoAnexo.value.nome_anexo);
+
     await anexosService.adicionarAnexo(formData);
     await carregarAnexos();
-    if (fileInput.value) {
-      fileInput.value.value = '';
-    }
+    resetForm();
   } catch (error) {
-    console.error('Erro ao fazer upload do anexo:', error);
+    console.error('Erro ao salvar anexo:', error);
   } finally {
-    uploading.value = false;
+    saving.value = false;
   }
 };
 
@@ -64,153 +256,25 @@ const removerAnexo = async (id: number) => {
   }
 };
 
+const resetForm = () => {
+  novoAnexo.value = {
+    nome_anexo: ''
+  };
+  selectedFile.value = null;
+  const input = document.getElementById('file-upload') as HTMLInputElement;
+  if (input) input.value = '';
+  showForm.value = false;
+};
+
 const formatarTamanho = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
-
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const formatarData = (data: string) => {
-  return new Date(data).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  return new Date(data).toLocaleDateString('pt-BR');
 };
-
-const getIconePorTipo = (tipo: string) => {
-  if (tipo.startsWith('image/')) {
-    return 'M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z';
-  }
-  if (tipo.startsWith('application/pdf')) {
-    return 'M4 4v16h12V8.83L11.17 4H4zm1 1h6v4h4v10H5V5zm7 .17L15.83 9H12V5.17z';
-  }
-  if (tipo.startsWith('application/msword') || tipo.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml')) {
-    return 'M4 4v16h12V8.83L11.17 4H4zm1 1h6v4h4v10H5V5zm7 .17L15.83 9H12V5.17z';
-  }
-  if (tipo.startsWith('application/vnd.ms-excel') || tipo.startsWith('application/vnd.openxmlformats-officedocument.spreadsheetml')) {
-    return 'M4 4v16h12V8.83L11.17 4H4zm1 1h6v4h4v10H5V5zm7 .17L15.83 9H12V5.17z';
-  }
-  return 'M4 4v16h12V8.83L11.17 4H4zm1 1h6v4h4v10H5V5zm7 .17L15.83 9H12V5.17z';
-};
-</script>
-
-<template>
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h3 class="text-lg font-medium text-gray-900">Anexos da Iniciativa</h3>
-      <div class="flex items-center space-x-3">
-        <input
-          ref="fileInput"
-          type="file"
-          @change="handleFileUpload"
-          class="hidden"
-          :disabled="uploading"
-        />
-        <button
-          type="button"
-          @click="fileInput?.click()"
-          :disabled="uploading"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg
-            class="-ml-1 mr-2 h-5 w-5"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          {{ uploading ? 'Enviando...' : 'Adicionar Anexo' }}
-        </button>
-      </div>
-    </div>
-
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-    </div>
-
-    <template v-else>
-      <!-- Lista de Anexos -->
-      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <ul role="list" class="divide-y divide-gray-200">
-          <li v-for="anexo in anexos" :key="anexo.id" class="px-4 py-4 sm:px-6">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center flex-1 min-w-0">
-                <div class="flex-shrink-0">
-                  <svg
-                    class="h-10 w-10 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path :d="getIconePorTipo(anexo.tipo_arquivo)" />
-                  </svg>
-                </div>
-                <div class="ml-4 flex-1 min-w-0">
-                  <div class="flex items-center justify-between">
-                    <p class="text-sm font-medium text-indigo-600 truncate">
-                      {{ anexo.nome_anexo }}
-                    </p>
-                    <div class="ml-2 flex-shrink-0 flex">
-                      <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        {{ formatarTamanho(anexo.tamanho_arquivo) }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="mt-2 flex justify-between">
-                    <div class="flex items-center text-sm text-gray-500">
-                      <p>Enviado em {{ formatarData(anexo.data_criacao) }}</p>
-                    </div>
-                    <div class="flex space-x-2">
-                      <a
-                        :href="anexo.caminho_arquivo"
-                        target="_blank"
-                        class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        <span class="sr-only">Download</span>
-                        <!-- Heroicon name: download -->
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path
-                            fill-rule="evenodd"
-                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
-                      </a>
-                      <button
-                        type="button"
-                        @click="removerAnexo(anexo.id)"
-                        class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        <span class="sr-only">Remover</span>
-                        <!-- Heroicon name: trash -->
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path
-                            fill-rule="evenodd"
-                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </template>
-  </div>
-</template> 
+</script> 

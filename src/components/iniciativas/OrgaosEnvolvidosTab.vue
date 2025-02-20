@@ -19,7 +19,7 @@ const novoOrgao = ref<Omit<OrgaoEnvolvido, 'id' | 'iniciativa_id' | 'data_criaca
   papel_orgao: '',
   nome_contato: '',
   email_contato: '',
-  obrigatorio: true
+  obrigatorio: false
 });
 
 onMounted(async () => {
@@ -83,10 +83,21 @@ const resetForm = () => {
     papel_orgao: '',
     nome_contato: '',
     email_contato: '',
-    obrigatorio: true
+    obrigatorio: false
   };
   editingOrgao.value = null;
   showForm.value = false;
+};
+
+const getPapelOrgaoLabel = (papel: string) => {
+  const papeis = {
+    responsavel: 'Responsável',
+    executor: 'Executor',
+    parceiro: 'Parceiro',
+    beneficiario: 'Beneficiário',
+    outro: 'Outro'
+  };
+  return papeis[papel as keyof typeof papeis] || papel;
 };
 
 const validarEmail = (email: string) => {
@@ -98,95 +109,89 @@ const validarEmail = (email: string) => {
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h3 class="text-lg font-medium text-gray-900">Órgãos Envolvidos na Iniciativa</h3>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Órgãos Envolvidos</h3>
       <button
         v-if="!showForm"
         type="button"
         @click="showForm = true"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
       >
         Adicionar Órgão
       </button>
     </div>
 
     <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
     </div>
 
     <template v-else>
       <!-- Formulário -->
-      <div v-if="showForm" class="bg-white shadow sm:rounded-lg p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div v-if="showForm" class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-4">
+        <div class="grid grid-cols-1 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
               Nome do Órgão *
             </label>
             <input
               v-model="novoOrgao.nome_orgao"
               type="text"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
               Papel do Órgão *
             </label>
-            <input
+            <select
               v-model="novoOrgao.papel_orgao"
-              type="text"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+            >
+              <option value="responsavel">Responsável</option>
+              <option value="executor">Executor</option>
+              <option value="parceiro">Parceiro</option>
+              <option value="beneficiario">Beneficiário</option>
+              <option value="outro">Outro</option>
+            </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Nome do Contato *
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Nome do Contato
             </label>
             <input
               v-model="novoOrgao.nome_contato"
               type="text"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Email do Contato *
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Email do Contato
             </label>
             <input
               v-model="novoOrgao.email_contato"
               type="email"
-              required
-              :class="[
-                'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                { 'border-red-300': novoOrgao.email_contato && !validarEmail(novoOrgao.email_contato) }
-              ]"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             />
-            <p
-              v-if="novoOrgao.email_contato && !validarEmail(novoOrgao.email_contato)"
-              class="mt-1 text-sm text-red-600"
-            >
-              Email inválido
-            </p>
           </div>
 
-          <div class="col-span-2">
-            <div class="relative flex items-start">
-              <div class="flex items-center h-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Obrigatório
+            </label>
+            <div class="mt-1">
+              <label class="inline-flex items-center">
                 <input
-                  v-model="novoOrgao.obrigatorio"
                   type="checkbox"
-                  class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                  v-model="novoOrgao.obrigatorio"
+                  class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
-              </div>
-              <div class="ml-3 text-sm">
-                <label class="font-medium text-gray-700">Participação Obrigatória</label>
-                <p class="text-gray-500">Marque esta opção se a participação deste órgão é obrigatória para a iniciativa.</p>
-              </div>
+                <span class="ml-2 text-sm text-gray-600">Sim</span>
+              </label>
             </div>
           </div>
         </div>
@@ -195,22 +200,15 @@ const validarEmail = (email: string) => {
           <button
             type="button"
             @click="resetForm"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
           >
             Cancelar
           </button>
           <button
             type="button"
             @click="salvarOrgao"
-            :disabled="
-              saving ||
-              !novoOrgao.nome_orgao ||
-              !novoOrgao.papel_orgao ||
-              !novoOrgao.nome_contato ||
-              !novoOrgao.email_contato ||
-              !validarEmail(novoOrgao.email_contato)
-            "
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            :disabled="saving || !novoOrgao.nome_orgao || !novoOrgao.papel_orgao"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 disabled:opacity-50"
           >
             {{ saving ? 'Salvando...' : (editingOrgao ? 'Atualizar' : 'Adicionar') }}
           </button>
@@ -218,62 +216,61 @@ const validarEmail = (email: string) => {
       </div>
 
       <!-- Lista de Órgãos -->
-      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <ul role="list" class="divide-y divide-gray-200">
-          <li v-for="orgao in orgaos" :key="orgao.id" class="px-4 py-4 sm:px-6">
-            <div class="flex items-center justify-between">
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-medium text-gray-900">{{ orgao.nome_orgao }}</h4>
-                  <span
-                    :class="[
-                      'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                      orgao.obrigatorio ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    ]"
-                  >
-                    {{ orgao.obrigatorio ? 'Obrigatório' : 'Opcional' }}
-                  </span>
+      <div v-else class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Órgão
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Papel
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Contato
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Obrigatório
+              </th>
+              <th scope="col" class="relative px-6 py-3">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-for="orgao in orgaos" :key="orgao.id">
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                <div>{{ orgao.nome_orgao }}</div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                {{ getPapelOrgaoLabel(orgao.papel_orgao) }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                <div v-if="orgao.nome_contato">{{ orgao.nome_contato }}</div>
+                <div v-if="orgao.email_contato" class="text-gray-500 dark:text-gray-400">
+                  {{ orgao.email_contato }}
                 </div>
-                <div class="mt-2 sm:flex sm:justify-between">
-                  <div class="sm:flex">
-                    <p class="flex items-center text-sm text-gray-500">
-                      {{ orgao.papel_orgao }}
-                    </p>
-                  </div>
-                  <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                    <p>{{ orgao.nome_contato }} ({{ orgao.email_contato }})</p>
-                  </div>
-                </div>
-              </div>
-              <div class="ml-5 flex-shrink-0">
-                <div class="flex space-x-2">
-                  <button
-                    type="button"
-                    @click="editarOrgao(orgao)"
-                    class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    <span class="sr-only">Editar</span>
-                    <!-- Heroicon name: pencil -->
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    @click="removerOrgao(orgao.id)"
-                    class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    <span class="sr-only">Remover</span>
-                    <!-- Heroicon name: trash -->
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                {{ orgao.obrigatorio ? 'Sim' : 'Não' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="editarOrgao(orgao)"
+                  class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
+                >
+                  Editar
+                </button>
+                <button
+                  @click="removerOrgao(orgao.id)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                >
+                  Remover
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </template>
   </div>

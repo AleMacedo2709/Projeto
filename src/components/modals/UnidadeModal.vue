@@ -53,8 +53,8 @@
           id="ativa"
           v-model="form.ativa"
           :options="[
-            { value: true, label: 'Ativa' },
-            { value: false, label: 'Inativa' }
+            { value: 'true', label: 'Ativa' },
+            { value: 'false', label: 'Inativa' }
           ]"
           placeholder="Selecione o status"
           required
@@ -91,7 +91,7 @@ interface UnidadeData {
   nome_unidade: string;
   sigla_unidade: string;
   tipo_unidade: string;
-  ativa: boolean;
+  ativa: string;
 }
 
 interface Props {
@@ -107,7 +107,7 @@ const props = withDefaults(defineProps<Props>(), {
     nome_unidade: '',
     sigla_unidade: '',
     tipo_unidade: '',
-    ativa: true
+    ativa: 'true'
   })
 });
 
@@ -122,7 +122,7 @@ const form = ref<UnidadeData>({
   nome_unidade: '',
   sigla_unidade: '',
   tipo_unidade: '',
-  ativa: true
+  ativa: 'true'
 });
 
 const handleSubmit = () => {
@@ -135,7 +135,9 @@ onMounted(() => {
       nome_unidade: props.initialData.nome_unidade || '',
       sigla_unidade: props.initialData.sigla_unidade || '',
       tipo_unidade: props.initialData.tipo_unidade || '',
-      ativa: props.initialData.ativa ?? true
+      ativa: typeof props.initialData.ativa === 'boolean' 
+        ? props.initialData.ativa.toString() 
+        : props.initialData.ativa || 'true'
     };
   }
 });

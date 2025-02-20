@@ -5,11 +5,23 @@ export interface BaseEntity {
   data_atualizacao: string;
 }
 
+// Tipos de status
+export type StatusAtual = 'nao_iniciado' | 'em_andamento' | 'concluido' | 'suspenso';
+export type StatusAprovacao = 'aguardando_aprovacao' | 'aprovado' | 'devolvido';
+export type TipoIniciativa = 'projeto' | 'boa_pratica' | 'programa';
+
+// Validações
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
 // Tipos principais
 export interface Iniciativa extends BaseEntity {
   nome_iniciativa: string;
-  tipo_iniciativa: 'projeto' | 'boa_pratica' | 'programa';
+  tipo_iniciativa: TipoIniciativa;
   unidade_gestora_id: number;
+  unidade_gestora?: string;
   selo_id?: number;
   programa_id?: number;
   objetivo_estrategico_id?: number;
@@ -17,14 +29,14 @@ export interface Iniciativa extends BaseEntity {
   promocao_objetivo: string;
   publico_impactado: string;
   ano_vigencia: number;
-  status_atual: 'nao_iniciado' | 'em_andamento' | 'concluido' | 'suspenso';
-  status_aprovacao: 'aguardando_aprovacao' | 'aprovado' | 'devolvido';
+  status_atual: StatusAtual;
+  status_aprovacao: StatusAprovacao;
   data_ultima_atualizacao?: string;
   caminho_imagem?: string;
   percentual_conclusao: number;
   data_ultima_avaliacao?: string;
-  programa: string;
-  objetivo_estrategico: string;
+  data_aprovacao?: string;
+  data_retorno?: string;
 }
 
 export interface Cronograma extends BaseEntity {
@@ -37,9 +49,9 @@ export interface Cronograma extends BaseEntity {
 
 export interface Financeiro extends BaseEntity {
   iniciativa_id: number;
-  custo_planejado?: number;
-  custo_real?: number;
-  economia?: number;
+  custo_planejado: number | null;
+  custo_real: number | null;
+  economia: number | null;
 }
 
 export interface Contato extends BaseEntity {
@@ -132,10 +144,22 @@ export interface UnidadeGestora extends BaseEntity {
   ativa: boolean;
 }
 
-export interface Usuario extends BaseEntity {
+export interface Usuario {
+  id: number;
   nome_usuario: string;
   email_usuario: string;
   cargo_usuario: string;
+  data_criacao: string;
+  data_atualizacao: string;
+}
+
+export interface Gestor {
+  id: number;
+  usuario_id: number;
+  niveis_acesso: string[];
+  ativo: boolean;
+  data_criacao: string;
+  data_atualizacao: string;
 }
 
 export interface Programa extends BaseEntity {
@@ -174,4 +198,14 @@ export interface NivelAcessoGestor extends BaseEntity {
 export interface ConfiguracaoSistema extends BaseEntity {
   email_gestor: string;
   email_aprovador: string;
+}
+
+export interface Marco extends BaseEntity {
+  iniciativa_id: number;
+  tipo_marco: 'inicio' | 'planejamento' | 'execucao' | 'monitoramento' | 'entrega' | 'encerramento' | 'outro';
+  status_marco: 'nao_iniciado' | 'em_andamento' | 'concluido' | 'atrasado' | 'cancelado';
+  descricao_marco: string;
+  data_prevista: string;
+  data_conclusao?: string;
+  observacoes?: string;
 } 

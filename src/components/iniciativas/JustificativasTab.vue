@@ -15,7 +15,7 @@ const showForm = ref(false);
 const editingJustificativa = ref<Justificativa | null>(null);
 
 const novaJustificativa = ref<Omit<Justificativa, 'id' | 'iniciativa_id' | 'data_criacao' | 'data_atualizacao'>>({
-  tipo_justificativa: 'resolutividade',
+  tipo_justificativa: '',
   descricao_justificativa: ''
 });
 
@@ -73,68 +73,73 @@ const removerJustificativa = async (id: number) => {
 
 const resetForm = () => {
   novaJustificativa.value = {
-    tipo_justificativa: 'resolutividade',
+    tipo_justificativa: '',
     descricao_justificativa: ''
   };
   editingJustificativa.value = null;
   showForm.value = false;
 };
 
-const tiposJustificativa = [
-  { value: 'resolutividade', label: 'Resolutividade' },
-  { value: 'inovacao', label: 'Inovação' },
-  { value: 'transparencia', label: 'Transparência' },
-  { value: 'proatividade', label: 'Proatividade' },
-  { value: 'cooperacao', label: 'Cooperação' }
-];
+const getTipoJustificativaLabel = (tipo: string) => {
+  const tipos = {
+    resolutividade: 'Resolutividade',
+    inovacao: 'Inovação',
+    transparencia: 'Transparência',
+    proatividade: 'Proatividade',
+    cooperacao: 'Cooperação'
+  };
+  return tipos[tipo as keyof typeof tipos] || tipo;
+};
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h3 class="text-lg font-medium text-gray-900">Justificativas da Iniciativa</h3>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Justificativas da Iniciativa</h3>
       <button
         v-if="!showForm"
         type="button"
         @click="showForm = true"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
       >
         Adicionar Justificativa
       </button>
     </div>
 
     <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
     </div>
 
     <template v-else>
       <!-- Formulário -->
-      <div v-if="showForm" class="bg-white shadow sm:rounded-lg p-4">
-        <div class="space-y-4">
+      <div v-if="showForm" class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-4">
+        <div class="grid grid-cols-1 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
               Tipo de Justificativa *
             </label>
             <select
               v-model="novaJustificativa.tipo_justificativa"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             >
-              <option v-for="tipo in tiposJustificativa" :key="tipo.value" :value="tipo.value">
-                {{ tipo.label }}
-              </option>
+              <option value="resolutividade">Resolutividade</option>
+              <option value="inovacao">Inovação</option>
+              <option value="transparencia">Transparência</option>
+              <option value="proatividade">Proatividade</option>
+              <option value="cooperacao">Cooperação</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
               Descrição da Justificativa *
             </label>
             <textarea
               v-model="novaJustificativa.descricao_justificativa"
-              rows="3"
+              rows="4"
               required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
             ></textarea>
           </div>
         </div>
@@ -143,15 +148,15 @@ const tiposJustificativa = [
           <button
             type="button"
             @click="resetForm"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
           >
             Cancelar
           </button>
           <button
             type="button"
             @click="salvarJustificativa"
-            :disabled="saving || !novaJustificativa.descricao_justificativa"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            :disabled="saving || !novaJustificativa.tipo_justificativa || !novaJustificativa.descricao_justificativa"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 disabled:opacity-50"
           >
             {{ saving ? 'Salvando...' : (editingJustificativa ? 'Atualizar' : 'Adicionar') }}
           </button>
@@ -159,49 +164,46 @@ const tiposJustificativa = [
       </div>
 
       <!-- Lista de Justificativas -->
-      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <ul role="list" class="divide-y divide-gray-200">
-          <li v-for="justificativa in justificativas" :key="justificativa.id" class="px-4 py-4 sm:px-6">
-            <div class="flex items-center justify-between">
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <span
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
-                  >
-                    {{ tiposJustificativa.find(t => t.value === justificativa.tipo_justificativa)?.label }}
-                  </span>
-                </div>
-                <p class="mt-2 text-sm text-gray-900">{{ justificativa.descricao_justificativa }}</p>
-              </div>
-              <div class="ml-5 flex-shrink-0">
-                <div class="flex space-x-2">
-                  <button
-                    type="button"
-                    @click="editarJustificativa(justificativa)"
-                    class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    <span class="sr-only">Editar</span>
-                    <!-- Heroicon name: pencil -->
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    @click="removerJustificativa(justificativa.id)"
-                    class="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    <span class="sr-only">Remover</span>
-                    <!-- Heroicon name: trash -->
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
+      <div v-else class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Tipo
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Descrição
+              </th>
+              <th scope="col" class="relative px-6 py-3">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-for="justificativa in justificativas" :key="justificativa.id">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {{ getTipoJustificativaLabel(justificativa.tipo_justificativa) }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                {{ justificativa.descricao_justificativa }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="editarJustificativa(justificativa)"
+                  class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
+                >
+                  Editar
+                </button>
+                <button
+                  @click="removerJustificativa(justificativa.id)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                >
+                  Remover
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </template>
   </div>

@@ -1,0 +1,43 @@
+{
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "add": "Add",
+      "search": "Search",
+      "filter": "Filter",
+      "retry": "Retry"
+    },
+    "status": {
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success",
+      "warning": "Warning"
+    }
+  },
+  "initiatives": {
+    "title": "MPSP Initiatives",
+    "myInitiatives": "My Initiatives",
+    "metrics": "Metrics & KPIs",
+    "management": "Initiative Management",
+    "status": {
+      "notStarted": "Not Started",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "suspended": "Suspended"
+    }
+  },
+  "metrics": {
+    "general": {
+      "title": "General Metrics",
+      "totalInitiatives": "Total Initiatives",
+      "averageCompletion": "Average Completion",
+      "delayedInitiatives": "Delayed Initiatives",
+      "overallPerformance": "Overall Performance",
+      "averageRiskLevel": "Average Risk Level",
+      "totalSavings": "Total Savings"
+    }
+  }
+} 

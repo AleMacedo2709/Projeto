@@ -221,18 +221,39 @@
               <div>
                 <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cronograma</h3>
                 <div class="space-y-2">
-                  <p class="text-sm"><span class="font-medium">Início Planejado:</span> {{ iniciativa.cronograma?.data_inicio_planejada }}</p>
-                  <p class="text-sm"><span class="font-medium">Fim Planejado:</span> {{ iniciativa.cronograma?.data_fim_planejada }}</p>
-                  <p class="text-sm"><span class="font-medium">Início Real:</span> {{ iniciativa.cronograma?.data_inicio_real || '-' }}</p>
-                  <p class="text-sm"><span class="font-medium">Fim Real:</span> {{ iniciativa.cronograma?.data_fim_real || '-' }}</p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Início Planejado:</span> 
+                    {{ iniciativa.cronograma?.data_inicio_planejada }}
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Fim Planejado:</span> 
+                    {{ iniciativa.cronograma?.data_fim_planejada }}
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Início Real:</span> 
+                    {{ iniciativa.cronograma?.data_inicio_real || '-' }}
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Fim Real:</span> 
+                    {{ iniciativa.cronograma?.data_fim_real || '-' }}
+                  </p>
                 </div>
               </div>
               <div>
                 <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Financeiro</h3>
                 <div class="space-y-2">
-                  <p class="text-sm"><span class="font-medium">Custo Planejado:</span> R$ {{ iniciativa.financeiro?.custo_planejado || '-' }}</p>
-                  <p class="text-sm"><span class="font-medium">Custo Real:</span> R$ {{ iniciativa.financeiro?.custo_real || '-' }}</p>
-                  <p class="text-sm"><span class="font-medium">Economia:</span> R$ {{ iniciativa.financeiro?.economia || '-' }}</p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Custo Planejado:</span> 
+                    R$ {{ iniciativa.financeiro?.custo_planejado || '-' }}
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Custo Real:</span> 
+                    R$ {{ iniciativa.financeiro?.custo_real || '-' }}
+                  </p>
+                  <p class="text-sm text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Economia:</span> 
+                    R$ {{ iniciativa.financeiro?.economia || '-' }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -264,25 +285,25 @@
           </section>
 
           <!-- Riscos -->
-          <section id="riscos" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+          <section id="riscos" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riscos</h2>
             <div class="space-y-4">
-              <div v-for="risco in iniciativa.riscos" :key="risco.id" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div v-for="risco in iniciativa.riscos" :key="risco.id" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div class="grid grid-cols-2 gap-4 mb-2">
                   <div>
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo: {{ risco.tipo_risco.nome_tipo }}</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ risco.descricao_risco }}</p>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Tipo: {{ risco.tipo_risco.nome_tipo }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">{{ risco.descricao_risco }}</p>
                   </div>
                   <div>
-                    <p class="text-sm"><span class="font-medium">Probabilidade:</span> {{ risco.probabilidade }}</p>
-                    <p class="text-sm"><span class="font-medium">Impacto:</span> {{ risco.impacto }}</p>
+                    <p class="text-sm"><span class="font-medium text-gray-700 dark:text-gray-200">Probabilidade:</span> <span class="text-gray-600 dark:text-gray-300">{{ risco.probabilidade }}</span></p>
+                    <p class="text-sm"><span class="font-medium text-gray-700 dark:text-gray-200">Impacto:</span> <span class="text-gray-600 dark:text-gray-300">{{ risco.impacto }}</span></p>
                   </div>
                 </div>
                 <div class="mt-2">
-                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Ação de Mitigação:</p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ risco.acao_mitigacao }}</p>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Ação de Mitigação:</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">{{ risco.acao_mitigacao }}</p>
                 </div>
-                <div class="mt-2 text-sm text-gray-500">
+                <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   <p>Responsável: {{ risco.nome_responsavel }} ({{ risco.email_responsavel }})</p>
                 </div>
               </div>

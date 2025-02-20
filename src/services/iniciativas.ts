@@ -1,37 +1,16 @@
-import type { User } from './auth';
+import type { Usuario, Iniciativa } from '../types/iniciativas';
 import api from './api';
 import { mockIniciativas } from '../mocks/iniciativas';
-
-export interface Iniciativa {
-  id: number;
-  nome_iniciativa: string;
-  tipo_iniciativa: 'projeto' | 'boa_pratica' | 'programa';
-  unidade_gestora_id: number;
-  selo_id?: number;
-  programa_id?: number;
-  objetivo_estrategico_id?: number;
-  descricao_iniciativa: string;
-  promocao_objetivo: string;
-  publico_impactado: string;
-  ano_vigencia: number;
-  status_atual: 'nao_iniciado' | 'em_andamento' | 'concluido' | 'suspenso';
-  status_aprovacao: 'aguardando_aprovacao' | 'aprovado' | 'devolvido';
-  data_ultima_atualizacao?: string;
-  caminho_imagem?: string;
-  data_criacao: string;
-  data_atualizacao: string;
-  percentual_conclusao: number;
-  data_ultima_avaliacao?: string;
-}
+import { mockDelay } from '../utils/mockUtils';
+import { useAuth } from './auth';
 
 export interface IniciativaComPapel extends Iniciativa {
   tipo_papel: 'cadastrador' | 'autor' | 'equipe' | 'gerente_projeto' | 'patrocinador';
 }
 
-// Helper function to simulate API delay in development
-const mockDelay = () => new Promise(resolve => setTimeout(resolve, 500));
-
 export const useIniciativas = () => {
+  const auth = useAuth();
+
   const getMinhasIniciativas = async (userId: number): Promise<IniciativaComPapel[]> => {
     try {
       if (import.meta.env.DEV) {
@@ -106,26 +85,9 @@ export const useIniciativas = () => {
     }
   };
 
-  const atualizarIniciativa = async (id: number, iniciativa: Partial<Iniciativa>): Promise<Iniciativa | null> => {
-    try {
-      if (import.meta.env.DEV) {
-        await mockDelay();
-        const existingIniciativa = mockIniciativas[id.toString()];
-        if (!existingIniciativa) return null;
-        const updatedIniciativa: Iniciativa = {
-          ...existingIniciativa,
-          ...iniciativa,
-          data_atualizacao: new Date().toISOString()
-        };
-        mockIniciativas[id.toString()] = updatedIniciativa;
-        return updatedIniciativa;
-      }
-      const response = await api.put(`/iniciativas/${id}`, iniciativa);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar iniciativa:', error);
-      return null;
-    }
+  const atualizarIniciativa = async (id: number, dados: Partial<Iniciativa>) => {
+    const response = await api.patch<Iniciativa>(`/iniciativas/${id}`, dados);
+    return response.data;
   };
 
   const excluirIniciativa = async (id: number): Promise<boolean> => {
@@ -144,12 +106,115 @@ export const useIniciativas = () => {
     }
   };
 
+  const getIniciativasParaAprovacao = async () => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        // Convert mock data to array and filter for awaiting approval
+        return Object.values(mockIniciativas).filter(iniciativa => 
+          iniciativa.status_aprovacao === 'aguardando_aprovacao'
+        );
+      }
+      
+      const nivelAcesso = auth.getCurrentUser()?.nivel_acesso;
+      const seloId = nivelAcesso === 'gestor_selo_pgj' ? 1 : 2; // 1 = PGJ, 2 = CG Cidadã
+      
+      const response = await api.get<Iniciativa[]>('/iniciativas', {
+        params: {
+          selo_id: seloId,
+          status_aprovacao: 'aguardando_aprovacao'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar iniciativas para aprovação:', error);
+      return [];
+    }
+  };
+
+  const getIniciativas = async (params?: any) => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        // Filter mock data to only show approved initiatives
+        const iniciativas = Object.values(mockIniciativas).filter(
+          iniciativa => iniciativa.status_aprovacao === 'aprovado'
+        );
+        return iniciativas;
+      }
+
+      const response = await api.get<Iniciativa[]>('/iniciativas', { 
+        params: {
+          ...params,
+          status_aprovacao: 'aprovado'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar iniciativas:', error);
+      return [];
+    }
+  };
+
+  const aprovarIniciativa = async (id: number): Promise<boolean> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const iniciativa = mockIniciativas[id.toString()];
+        if (!iniciativa) return false;
+        
+        const now = new Date().toISOString();
+        iniciativa.status_aprovacao = 'aprovado';
+        iniciativa.data_aprovacao = now;
+        iniciativa.data_atualizacao = now;
+        return true;
+      }
+      
+      await api.post(`/iniciativas/${id}/aprovar`);
+      return true;
+    } catch (error) {
+      console.error('Erro ao aprovar iniciativa:', error);
+      return false;
+    }
+  };
+
+  const devolverIniciativa = async (id: number): Promise<boolean> => {
+    try {
+      if (import.meta.env.DEV) {
+        await mockDelay();
+        const iniciativa = mockIniciativas[id.toString()];
+        if (!iniciativa) return false;
+        
+        const now = new Date().toISOString();
+        iniciativa.status_aprovacao = 'retornado';
+        iniciativa.data_retorno = now;
+        iniciativa.data_atualizacao = now;
+        return true;
+      }
+      
+      await api.post(`/iniciativas/${id}/devolver`);
+      return true;
+    } catch (error) {
+      console.error('Erro ao devolver iniciativa:', error);
+      return false;
+    }
+  };
+
+  const deletarIniciativa = async (id: number) => {
+    await api.delete(`/iniciativas/${id}`);
+  };
+
   return {
     getMinhasIniciativas,
     getIniciativasPorPapel,
     getIniciativa,
     criarIniciativa,
     atualizarIniciativa,
-    excluirIniciativa
+    excluirIniciativa,
+    getIniciativasParaAprovacao,
+    getIniciativas,
+    deletarIniciativa,
+    aprovarIniciativa,
+    devolverIniciativa
   };
 }; 
